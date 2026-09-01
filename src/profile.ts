@@ -16,26 +16,26 @@
 
 export const profile = {
   /** Your name as you want it to appear everywhere. */
-  displayName: "Your Name",
+  displayName: "Arianna Tenesaca",
 
   /** Your UD email — must match the one you signed into the course with. */
-  email: "you@udel.edu",
+  email: "ariatene@udel.edu",
 
   /** Where you're from. Shows on your roster card and /about. */
-  hometown: "Newark, Delaware",
+  hometown: "Lake Peekskill, NY",
 
   /**
    * 2 to 4 fun facts (the grader checks the count!). Real ones: they're
    * how classmates find something to say hello about.
    */
   funFacts: [
-    "I once assembled IKEA furniture without leftover screws.",
-    "I can name every U.S. state capital in under two minutes.",
+    "I enjoy going to the gym.",
+    "I love to travel.",
   ],
 
   /** One decision you're proud of, in a sentence. */
   decisionImProudOf:
-    "I chose to take a gap semester to work retail; it taught me more about customers than any textbook.",
+    "I chose to change my major to Business Analytics because I thoroughly enjoy the courses.",
 
   /**
    * Your photo. Replace public/photo.svg with a real photo of you
@@ -49,7 +49,7 @@ export const profile = {
    *   "class"          — your classmates and the professor (recommended)
    *   "professor-only" — just the professor
    */
-  rosterVisibility: "class" as "class" | "professor-only",
+  rosterVisibility: "class",
 
   /** A one-line tagline for your home page. Make it yours. */
   tagline: "Building a portfolio of decision services, one lane at a time.",
@@ -65,5 +65,5 @@ export const profile = {
    * verify you have ≥ 5 commits spread over days (not one bulk dump).
    * Example: "https://github.com/your-username/your-repo"
    */
-  repoUrl: "https://github.com/your-username/your-repo",
+  repoUrl: "https://github.com/ariannatenesaca/my-site",
 };
