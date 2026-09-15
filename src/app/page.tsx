@@ -39,11 +39,21 @@ export default function HomePage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-14">
       {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">
-        {profile.tagline}
-      </p>
-      <h1 className="mt-3 text-5xl font-bold">{profile.displayName}</h1>
-      <p className="mt-5 max-w-prose text-lg text-muted">{profile.bio}</p>
+      <div className="flex flex-col gap-8 sm:flex-row sm:items-start">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={profile.photoPath}
+          alt={profile.displayName}
+          className="h-40 w-40 shrink-0 rounded-2xl border border-line object-cover sm:h-48 sm:w-48"
+        />
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">
+            {profile.tagline}
+          </p>
+          <h1 className="mt-3 text-5xl font-bold">{profile.displayName}</h1>
+          <p className="mt-5 max-w-prose text-lg text-muted">{profile.bio}</p>
+        </div>
+      </div>
 
       {/* ── Portfolio of decision services ───────────────────────────── */}
       <section className="mt-14">
