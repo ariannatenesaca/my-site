@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
-import { saveLatestGame } from "@/lib/simulator-store";
+import { saveLatest, type CandidateSummary } from "@/lib/simulator-store";
 
 const N_PATHS = 12_000;
 
-function simulateStrategy(
-  f: number,
-  u: number,
-  d: number,
-  years: number,
-  buyIn: number
-): { medianFinalBalance: number; probLoss: number } {
+function quantile(sorted: number[], q: number): number {
+  const i = (sorted.length - 1) * q;
+  const lo = Math.floor(i);
+  const hi = Math.ceil(i);
+  if (lo === hi) return sorted[lo];
+  return sorted[lo] * (hi - i) + sorted[hi] * (i - lo);
+}
+
+function simulateStrategy(f: number, u: number, d: number, years: number, buyIn: number): CandidateSummary {
   const finals = new Array<number>(N_PATHS);
   let losses = 0;
   for (let p = 0; p < N_PATHS; p++) {
@@ -22,10 +24,15 @@ function simulateStrategy(
     if (w < buyIn) losses += 1;
   }
   finals.sort((a, b) => a - b);
-  const mid = N_PATHS >> 1;
-  const medianFinalBalance =
-    N_PATHS % 2 === 0 ? (finals[mid - 1] + finals[mid]) / 2 : finals[mid];
-  return { medianFinalBalance, probLoss: losses / N_PATHS };
+  return {
+    fraction: f,
+    p5: quantile(finals, 0.05),
+    p25: quantile(finals, 0.25),
+    median: quantile(finals, 0.5),
+    p75: quantile(finals, 0.75),
+    p95: quantile(finals, 0.95),
+    probLoss: losses / N_PATHS,
+  };
 }
 
 export async function POST(req: Request) {
@@ -41,29 +48,22 @@ export async function POST(req: Request) {
   const d = Number(game.downPct) / 100;
   const years = Number(game.horizonYears);
   const buyIn = Number(game.buyIn);
-  const candidates: number[] = game.candidateFractions;
-  if (!Array.isArray(candidates) || candidates.length === 0) {
+  const fractions: number[] = game.candidateFractions;
+  if (!Array.isArray(fractions) || fractions.length === 0) {
     return NextResponse.json({ error: "candidateFractions must be a non-empty array" }, { status: 400 });
   }
 
-  let recommendedFraction = candidates[0];
-  let best = simulateStrategy(recommendedFraction, u, d, years, buyIn);
-  for (let i = 1; i < candidates.length; i++) {
-    const stats = simulateStrategy(candidates[i], u, d, years, buyIn);
-    if (stats.medianFinalBalance > best.medianFinalBalance) {
-      recommendedFraction = candidates[i];
-      best = stats;
-    }
-  }
+  const candidates = fractions.map((f) => simulateStrategy(f, u, d, years, buyIn));
+  const best = candidates.reduce((a, b) => (b.median > a.median ? b : a));
 
   const answer = {
-    recommendedFraction,
-    medianFinalBalance: best.medianFinalBalance,
+    recommendedFraction: best.fraction,
+    medianFinalBalance: best.median,
     probLoss: best.probLoss,
     reasoning:
       "This stake grows the typical (median) path the most: each year only the staked slice is flipped by the coin, and a smaller fraction dies less often than betting everything.",
   };
 
-  await saveLatestGame(game, answer);
+  await saveLatest(game, answer, candidates);
   return NextResponse.json(answer);
 }

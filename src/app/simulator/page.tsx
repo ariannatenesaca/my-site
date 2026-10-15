@@ -1,12 +1,12 @@
 import { ComingSoon } from "@/components/ComingSoon";
-import { loadLatestGame } from "@/lib/simulator-store";
+import { loadLatest } from "@/lib/simulator-store";
 
 export const metadata = { title: "Decision Simulator" };
 
 export const dynamic = "force-dynamic";
 
 export default async function SimulatorPage() {
-  const latest = await loadLatestGame();
+  const latest = await loadLatest();
 
   if (!latest) {
     return (
