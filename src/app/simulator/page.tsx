@@ -37,7 +37,7 @@ export default async function SimulatorPage() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           data-simulator="dag"
-          src="/simulator-dag.png"
+          src="/images/dag.png"
           alt="Probabilistic graphical model of the investment game: stake fraction and each year's coin flip determine next wealth."
           className="mt-6 w-full max-w-lg rounded-xl border border-line bg-surface p-4"
         />
