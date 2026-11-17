@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { saveLatest } from "@/lib/causality-store";
+import { saveLatest, type CausalitySummary } from "@/lib/causality-store";
 
 type Structure = "fork" | "pipe" | "collider" | "direct";
 
@@ -29,19 +29,13 @@ function stratifiedEffect(rows: { x: number; z: number; y: number }[]): number {
 function classifyStructure(
   facts: { zTiming?: string; zInfluencesX?: boolean },
   naive: number,
-  strat: number
+  stratified: number
 ): Structure {
-  const a = Math.abs(naive);
-  const s = Math.abs(strat);
-  const naiveOn = a >= VISIBLE;
-  const stratOn = s >= VISIBLE;
-
   if (facts.zTiming === "before-x" && facts.zInfluencesX) return "fork";
-  if (facts.zTiming === "after-x" && naiveOn && !stratOn) return "pipe";
-  if (!naiveOn && stratOn) return "collider";
-  if (facts.zTiming === "before-x" && facts.zInfluencesX === false) return "direct";
-  if (naiveOn && stratOn && Math.abs(naive - strat) <= 0.2) return "direct";
+  const naiveOn = Math.abs(naive) >= VISIBLE;
+  const stratOn = Math.abs(stratified) >= VISIBLE;
   if (naiveOn && !stratOn) return "pipe";
+  if (!naiveOn && stratOn) return "collider";
   return "direct";
 }
 
@@ -66,6 +60,9 @@ export async function POST(req: Request) {
         ? Math.abs(strat) >= VISIBLE
         : false;
   const advice = structure === "fork" ? "stratify" : "do-not-stratify";
+  const zLabel = String(probe.context?.zLabel ?? "Z");
+  const z0 = String(probe.context?.z0 ?? "0");
+  const z1 = String(probe.context?.z1 ?? "1");
 
   const answer = {
     structure,
@@ -82,6 +79,24 @@ export async function POST(req: Request) {
             : "Z is not on the causal path from X to Y, so the naive contrast already is the effect.",
   };
 
-  await saveLatest(probe, answer);
+  const { dataset: _dataset, ...probeWithoutRows } = probe;
+  const slice = (pred: (r: (typeof rows)[number]) => boolean) => rows.filter(pred);
+  const meanY = (xs: typeof rows) => (xs.length ? xs.reduce((s, r) => s + r.y, 0) / xs.length : 0);
+  const group = (label: string, xs: typeof rows) => {
+    const g0 = xs.filter((r) => r.x === 0);
+    const g1 = xs.filter((r) => r.x === 1);
+    return { label, n0: g0.length, mean0: meanY(g0), n1: g1.length, mean1: meanY(g1) };
+  };
+  const summary: CausalitySummary = {
+    naive,
+    stratified: strat,
+    groups: [
+      group("All data", rows),
+      group(`${zLabel}: ${z0}`, slice((r) => r.z === 0)),
+      group(`${zLabel}: ${z1}`, slice((r) => r.z === 1)),
+    ],
+  };
+
+  await saveLatest(probeWithoutRows, answer, summary);
   return NextResponse.json(answer);
 }

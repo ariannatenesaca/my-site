@@ -18,8 +18,12 @@ export default async function CausalityPage() {
     );
   }
 
-  const { problem, answer } = latest;
+  const { probe, answer } = latest;
   const verdict = answer.causal ? "causal" : "not causal";
+  const dag =
+    answer.structure === "pipe" || answer.structure === "collider" || answer.structure === "direct"
+      ? answer.structure
+      : "fork";
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-14">
@@ -34,7 +38,7 @@ export default async function CausalityPage() {
 
       <section className="mt-10">
         <h2 className="text-2xl font-bold">The latest case</h2>
-        <p className="mt-3 max-w-prose text-muted">{String(problem.context?.narrative ?? "")}</p>
+        <p className="mt-3 max-w-prose text-muted">{String(probe.context?.narrative ?? "")}</p>
       </section>
 
       <section className="mt-10">
@@ -69,7 +73,7 @@ export default async function CausalityPage() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           data-causality="dag"
-          src="/images/causality-dags.png"
+          src={`/images/causality/${dag}.png`}
           alt="Four candidate DAGs: fork, pipe, collider, and direct effect."
           className="mt-3 w-full max-w-2xl rounded-lg border border-line bg-white p-3"
         />
